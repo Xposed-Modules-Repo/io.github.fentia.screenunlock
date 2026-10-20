@@ -25,19 +25,6 @@
 
 本项目的改动是在 `VirtualDisplayAdapter#createVirtualDisplayLocked` 中，对 caller 为 `com.oplus.cast` 的请求清除 `VIRTUAL_DISPLAY_FLAG_PUBLIC`，使该显示转为私有。私有的判定逻辑在 `Display#hasAccess()`：只允许显示属主、system uid 以及内容正显示在该屏上的 uid 访问，其余应用拿到的是 `null`。
 
-两个实现要点：
-
-- 上游原有的提前返回条件是「调用方非系统 uid 且非 MediaProjection 时直接放行」，`com.oplus.cast` 正好落在这一区间，不做处理则新逻辑不会执行，因此对该包名做了例外
-- 只清除 `PUBLIC` 而保留 `AUTO_MIRROR`，镜像行为不受影响，投屏画面正常，只是这块显示的存在性对外界隐藏
-
-诊断方面，每当有公开虚拟屏被创建时会输出一行日志，包含调用方包名和改写前后的 flags：
-
-```
-vdisplay pkg=com.oplus.cast flags=0x27 -> 0x26
-```
-
-日志 tag 为 `ScreenUnlock`，可通过 `adb logcat -s ScreenUnlock` 或 LSPosed 管理器的日志页查看。
-
 实际效果，以中国建设银行 App 在 OPPO 互联投屏状态下为例。左图为使用模块前，应用弹出安全提示并要求退出手机银行；右图为使用模块后，界面正常，不再出现提示。
 
 | 使用模块前 | 使用模块后 |
